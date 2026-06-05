@@ -10,9 +10,7 @@ const player = {
   x: 140,
   y: height / 2,
   size: 24,
-  velocity: 0,
-  gravity: 0.35,
-  lift: -0.65,
+  speed: 3.6,
 };
 
 const obstacleWidth = 58;
@@ -32,7 +30,6 @@ function resetGame() {
   frame = 0;
   score = 0;
   player.y = height / 2;
-  player.velocity = 0;
   alive = true;
   started = true;
   inputActive = false;
@@ -49,18 +46,10 @@ function update() {
 
   frame += 1;
 
-  if (inputActive) {
-    player.velocity += player.lift;
-  } else {
-    player.velocity += player.gravity;
-  }
-
-  player.velocity = Math.max(Math.min(player.velocity, 8), -8);
-  player.y += player.velocity;
+  player.y += inputActive ? -player.speed : player.speed;
 
   if (player.y < 0) {
     player.y = 0;
-    player.velocity = 0;
   }
   if (player.y + player.size > height) {
     player.y = height - player.size;
