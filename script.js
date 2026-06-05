@@ -25,6 +25,7 @@ let best = 0;
 let started = false;
 let alive = true;
 let inputActive = false;
+let trail = [];
 
 function resetGame() {
   obstacles = [];
@@ -34,6 +35,7 @@ function resetGame() {
   alive = true;
   started = true;
   inputActive = false;
+  trail = [];
 }
 
 function spawnObstacle() {
@@ -55,6 +57,11 @@ function update() {
   if (player.y + player.size > height) {
     player.y = height - player.size;
     alive = false;
+  }
+
+  trail.push({ x: player.x + player.size / 2, y: player.y + player.size / 2 });
+  if (trail.length > 30) {
+    trail.shift();
   }
 
   if (frame % 70 === 0) {
@@ -176,15 +183,15 @@ function collidesWithPlayer(obstacle) {
 
   const topPolygon = [
     { x: obstacle.x, y: 0 },
-    { x: obstacle.x + obstacleWidth, y: obstacle.gapY },
     { x: obstacle.x + obstacleWidth, y: 0 },
+    { x: obstacle.x + obstacleWidth, y: obstacle.gapY },
     { x: obstacle.x, y: topLeftY },
   ];
 
   const bottomPolygon = [
     { x: obstacle.x, y: height },
-    { x: obstacle.x + obstacleWidth, y: obstacle.gapY + gapSize },
     { x: obstacle.x + obstacleWidth, y: height },
+    { x: obstacle.x + obstacleWidth, y: obstacle.gapY + gapSize },
     { x: obstacle.x, y: bottomLeftY },
   ];
 
@@ -208,6 +215,20 @@ function draw() {
     ctx.fillRect((i * 80 + frame * 0.6) % width, height - 16, 35, 8);
   }
 
+  if (trail.length) {
+    ctx.strokeStyle = 'rgba(15, 167, 255, 0.35)';
+    ctx.lineWidth = 4;
+    ctx.beginPath();
+    trail.forEach((point, index) => {
+      if (index === 0) {
+        ctx.moveTo(point.x, point.y);
+      } else {
+        ctx.lineTo(point.x, point.y);
+      }
+    });
+    ctx.stroke();
+  }
+
   ctx.fillStyle = '#0797d9';
   ctx.fillRect(player.x, player.y, player.size, player.size);
   ctx.fillStyle = '#ffffff';
@@ -218,36 +239,48 @@ function draw() {
     const topLeftY = Math.max(0, obstacle.gapY - obstacleWidth);
     const bottomLeftY = Math.min(height, obstacle.gapY + gapSize + obstacleWidth);
 
+    const pathPolygon = [
+      { x: obstacle.x, y: topLeftY },
+      { x: rightX, y: obstacle.gapY },
+      { x: rightX, y: obstacle.gapY + gapSize },
+      { x: obstacle.x, y: bottomLeftY },
+    ];
+
+    ctx.fillStyle = 'rgba(8, 24, 40, 0.9)';
+    ctx.beginPath();
+    pathPolygon.forEach((point, index) => {
+      if (index === 0) ctx.moveTo(point.x, point.y);
+      else ctx.lineTo(point.x, point.y);
+    });
+    ctx.closePath();
+    ctx.fill();
+
     ctx.fillStyle = '#ff6b6b';
     ctx.beginPath();
     ctx.moveTo(obstacle.x, 0);
-    ctx.lineTo(rightX, obstacle.gapY);
     ctx.lineTo(rightX, 0);
+    ctx.lineTo(rightX, obstacle.gapY);
+    ctx.lineTo(obstacle.x, topLeftY);
     ctx.closePath();
     ctx.fill();
 
     ctx.beginPath();
     ctx.moveTo(obstacle.x, height);
-    ctx.lineTo(rightX, obstacle.gapY + gapSize);
     ctx.lineTo(rightX, height);
+    ctx.lineTo(rightX, obstacle.gapY + gapSize);
+    ctx.lineTo(obstacle.x, bottomLeftY);
     ctx.closePath();
     ctx.fill();
 
-    ctx.strokeStyle = 'rgba(255,255,255,0.36)';
-    ctx.lineWidth = 3;
-    ctx.beginPath();
-    ctx.moveTo(obstacle.x, 0);
-    ctx.lineTo(rightX, obstacle.gapY);
-    ctx.lineTo(rightX, obstacle.gapY + gapSize);
-    ctx.lineTo(obstacle.x, height);
-    ctx.stroke();
-
-    ctx.strokeStyle = 'rgba(255,255,255,0.12)';
-    ctx.lineWidth = 1;
+    ctx.strokeStyle = 'rgba(255,255,255,0.28)';
+    ctx.lineWidth = 2;
     ctx.beginPath();
     ctx.moveTo(obstacle.x, topLeftY);
+    ctx.lineTo(rightX, obstacle.gapY);
+    ctx.lineTo(rightX, obstacle.gapY + gapSize);
     ctx.lineTo(obstacle.x, bottomLeftY);
     ctx.stroke();
+  });
   });
 
   if (!started) {
