@@ -6,16 +6,17 @@ const bestEl = document.getElementById('best');
 const width = canvas.width;
 const height = canvas.height;
 
+const levelSpeed = 7.2;
 const player = {
   x: 140,
   y: height / 2,
   size: 24,
-  speed: 3.6,
+  speed: levelSpeed,
 };
 
-const obstacleWidth = 58;
-const gapSize = 170;
-const spawnSpacing = 280;
+const obstacleWidth = 72;
+const gapSize = 150;
+const spawnSpacing = 240;
 
 let obstacles = [];
 let frame = 0;
@@ -56,12 +57,12 @@ function update() {
     alive = false;
   }
 
-  if (frame % 90 === 0) {
+  if (frame % 70 === 0) {
     spawnObstacle();
   }
 
   obstacles.forEach((obstacle) => {
-    obstacle.x -= 3.6;
+    obstacle.x -= levelSpeed;
     const passed = obstacle.x + obstacleWidth < player.x && !obstacle.scored;
     if (passed) {
       obstacle.scored = true;
@@ -91,20 +92,103 @@ function update() {
   }
 }
 
+function sign(px, py, ax, ay, bx, by) {
+  return (px - bx) * (ay - by) - (ax - bx) * (py - by);
+}
+
+function pointInPolygon(px, py, polygon) {
+  let inside = false;
+  for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
+    const xi = polygon[i].x;
+    const yi = polygon[i].y;
+    const xj = polygon[j].x;
+    const yj = polygon[j].y;
+    const intersect = ((yi > py) !== (yj > py)) && (px < (xj - xi) * (py - yi) / (yj - yi) + xi);
+    if (intersect) inside = !inside;
+  }
+  return inside;
+}
+
+function lineSegmentsIntersect(x1, y1, x2, y2, x3, y3, x4, y4) {
+  const d1 = sign(x3, y3, x1, y1, x2, y2);
+  const d2 = sign(x4, y4, x1, y1, x2, y2);
+  const d3 = sign(x1, y1, x3, y3, x4, y4);
+  const d4 = sign(x2, y2, x3, y3, x4, y4);
+  if (((d1 > 0 && d2 < 0) || (d1 < 0 && d2 > 0)) && ((d3 > 0 && d4 < 0) || (d3 < 0 && d4 > 0))) {
+    return true;
+  }
+  return false;
+}
+
+function rectPolygonCollision(rect, polygon) {
+  const rectPoints = [
+    { x: rect.left, y: rect.top },
+    { x: rect.right, y: rect.top },
+    { x: rect.right, y: rect.bottom },
+    { x: rect.left, y: rect.bottom },
+  ];
+
+  for (const point of rectPoints) {
+    if (pointInPolygon(point.x, point.y, polygon)) {
+      return true;
+    }
+  }
+
+  for (const polyPoint of polygon) {
+    if (polyPoint.x >= rect.left && polyPoint.x <= rect.right && polyPoint.y >= rect.top && polyPoint.y <= rect.bottom) {
+      return true;
+    }
+  }
+
+  const rectEdges = [
+    [rectPoints[0], rectPoints[1]],
+    [rectPoints[1], rectPoints[2]],
+    [rectPoints[2], rectPoints[3]],
+    [rectPoints[3], rectPoints[0]],
+  ];
+  const polyEdges = [];
+  for (let i = 0; i < polygon.length; i++) {
+    const nextIndex = (i + 1) % polygon.length;
+    polyEdges.push([polygon[i], polygon[nextIndex]]);
+  }
+
+  for (const [r1, r2] of rectEdges) {
+    for (const [p1, p2] of polyEdges) {
+      if (lineSegmentsIntersect(r1.x, r1.y, r2.x, r2.y, p1.x, p1.y, p2.x, p2.y)) {
+        return true;
+      }
+    }
+  }
+
+  return false;
+}
+
 function collidesWithPlayer(obstacle) {
-  const playerLeft = player.x;
-  const playerRight = player.x + player.size;
-  const playerTop = player.y;
-  const playerBottom = player.y + player.size;
+  const rect = {
+    left: player.x,
+    right: player.x + player.size,
+    top: player.y,
+    bottom: player.y + player.size,
+  };
 
-  const obsLeft = obstacle.x;
-  const obsRight = obstacle.x + obstacleWidth;
-  const topBottom = obstacle.gapY;
-  const bottomTop = obstacle.gapY + gapSize;
+  const topLeftY = Math.max(0, obstacle.gapY - obstacleWidth);
+  const bottomLeftY = Math.min(height, obstacle.gapY + gapSize + obstacleWidth);
 
-  if (playerRight < obsLeft || playerLeft > obsRight) return false;
-  if (playerTop > topBottom && playerBottom < bottomTop) return false;
-  return true;
+  const topPolygon = [
+    { x: obstacle.x, y: 0 },
+    { x: obstacle.x + obstacleWidth, y: obstacle.gapY },
+    { x: obstacle.x + obstacleWidth, y: 0 },
+    { x: obstacle.x, y: topLeftY },
+  ];
+
+  const bottomPolygon = [
+    { x: obstacle.x, y: height },
+    { x: obstacle.x + obstacleWidth, y: obstacle.gapY + gapSize },
+    { x: obstacle.x + obstacleWidth, y: height },
+    { x: obstacle.x, y: bottomLeftY },
+  ];
+
+  return rectPolygonCollision(rect, topPolygon) || rectPolygonCollision(rect, bottomPolygon);
 }
 
 function draw() {
@@ -130,12 +214,40 @@ function draw() {
   ctx.fillRect(player.x + 10, player.y + 10, 4, 4);
 
   obstacles.forEach((obstacle) => {
+    const rightX = obstacle.x + obstacleWidth;
+    const topLeftY = Math.max(0, obstacle.gapY - obstacleWidth);
+    const bottomLeftY = Math.min(height, obstacle.gapY + gapSize + obstacleWidth);
+
     ctx.fillStyle = '#ff6b6b';
-    ctx.fillRect(obstacle.x, 0, obstacleWidth, obstacle.gapY);
-    ctx.fillRect(obstacle.x, obstacle.gapY + gapSize, obstacleWidth, height - obstacle.gapY - gapSize - 40);
-    ctx.fillStyle = '#ed5565';
-    ctx.fillRect(obstacle.x + 10, obstacle.gapY - 8, 38, 8);
-    ctx.fillRect(obstacle.x + 10, obstacle.gapY + gapSize, 38, 8);
+    ctx.beginPath();
+    ctx.moveTo(obstacle.x, 0);
+    ctx.lineTo(rightX, obstacle.gapY);
+    ctx.lineTo(rightX, 0);
+    ctx.closePath();
+    ctx.fill();
+
+    ctx.beginPath();
+    ctx.moveTo(obstacle.x, height);
+    ctx.lineTo(rightX, obstacle.gapY + gapSize);
+    ctx.lineTo(rightX, height);
+    ctx.closePath();
+    ctx.fill();
+
+    ctx.strokeStyle = 'rgba(255,255,255,0.36)';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(obstacle.x, 0);
+    ctx.lineTo(rightX, obstacle.gapY);
+    ctx.lineTo(rightX, obstacle.gapY + gapSize);
+    ctx.lineTo(obstacle.x, height);
+    ctx.stroke();
+
+    ctx.strokeStyle = 'rgba(255,255,255,0.12)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(obstacle.x, topLeftY);
+    ctx.lineTo(obstacle.x, bottomLeftY);
+    ctx.stroke();
   });
 
   if (!started) {
