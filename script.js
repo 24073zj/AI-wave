@@ -14,7 +14,8 @@ const player = {
   speed: levelSpeed,
 };
 
-const obstacleWidth = 72;
+const minObstacleWidth = 48;
+const maxObstacleWidth = 120;
 const gapSize = 150;
 const spawnSpacing = 240;
 
@@ -39,9 +40,22 @@ function resetGame() {
   trail = [];
 }
 
-function spawnObstacle(x = width + 20) {
-  const gapY = 90 + Math.random() * (height - 220 - gapSize);
-  obstacles.push({ x, gapY, scored: false, flipped: nextObstacleFlipped });
+function spawnObstacle(x = width + 20, w) {
+  // allow controlled vertical variation while keeping neighboring gaps roughly aligned
+  const minGapY = 90;
+  const maxGapY = height - 130 - gapSize;
+  let gapY;
+  if (obstacles.length) {
+    const prev = obstacles[obstacles.length - 1].gapY;
+    const variation = 110; // max vertical change between neighboring obstacles
+    const delta = (Math.random() - 0.5) * variation;
+    gapY = Math.round(Math.max(minGapY, Math.min(maxGapY, prev + delta)));
+  } else {
+    gapY = Math.round(minGapY + Math.random() * (maxGapY - minGapY));
+  }
+
+  const widthVal = typeof w === 'number' ? w : Math.floor(minObstacleWidth + Math.random() * (maxObstacleWidth - minObstacleWidth));
+  obstacles.push({ x, gapY, scored: false, flipped: nextObstacleFlipped, w: widthVal });
   nextObstacleFlipped = !nextObstacleFlipped;
 }
 
@@ -84,14 +98,15 @@ function update() {
     spawnObstacle();
   } else {
     const lastObstacle = obstacles[obstacles.length - 1];
-    if (lastObstacle.x + obstacleWidth <= width + 20) {
-      spawnObstacle(lastObstacle.x + obstacleWidth);
+    if (lastObstacle.x + lastObstacle.w <= width + 20) {
+      const newX = lastObstacle.x + lastObstacle.w; // place adjacent to previous
+      spawnObstacle(newX);
     }
   }
 
   obstacles.forEach((obstacle) => {
     obstacle.x -= levelSpeed;
-    const passed = obstacle.x + obstacleWidth < player.x && !obstacle.scored;
+    const passed = obstacle.x + obstacle.w < player.x && !obstacle.scored;
     if (passed) {
       obstacle.scored = true;
       score += 1;
@@ -103,7 +118,7 @@ function update() {
     }
   });
 
-  obstacles = obstacles.filter((obstacle) => obstacle.x + obstacleWidth > -40);
+  obstacles = obstacles.filter((obstacle) => obstacle.x + obstacle.w > -40);
 
   obstacles.forEach((obstacle) => {
     if (collidesWithPlayer(obstacle)) {
@@ -202,9 +217,9 @@ function collidesWithPlayer(obstacle) {
   // horizontal flip means the notch is mirrored left-right
   const gapTop = obstacle.gapY;
   const gapBottom = gapTop + gapSize;
-  const rightX = obstacle.x + obstacleWidth;
-  const topLeftY = Math.max(0, gapTop - obstacleWidth);
-  const bottomLeftY = Math.min(height, gapBottom + obstacleWidth);
+  const rightX = obstacle.x + obstacle.w;
+  const topLeftY = Math.max(0, gapTop - obstacle.w);
+  const bottomLeftY = Math.min(height, gapBottom + obstacle.w);
 
   let topPolygon;
   let bottomPolygon;
@@ -251,20 +266,14 @@ function draw() {
   ctx.fillStyle = gradient;
   ctx.fillRect(0, 0, width, height);
 
-  ctx.fillStyle = '#112936';
-  ctx.fillRect(0, height - 40, width, 40);
-
-  ctx.fillStyle = '#194055';
-  for (let i = 0; i < 30; i++) {
-    ctx.fillRect((i * 80 + frame * 0.6) % width, height - 16, 35, 8);
-  }
+  // ground/road styling removed per request
 
   obstacles.forEach((obstacle) => {
-    const rightX = obstacle.x + obstacleWidth;
+    const rightX = obstacle.x + obstacle.w;
     const gapTop = obstacle.gapY;
     const gapBottom = gapTop + gapSize;
-    const topLeftY = Math.max(0, gapTop - obstacleWidth);
-    const bottomLeftY = Math.min(height, gapBottom + obstacleWidth);
+    const topLeftY = Math.max(0, gapTop - obstacle.w);
+    const bottomLeftY = Math.min(height, gapBottom + obstacle.w);
 
     // main body polygon (dark)
     let pathPolygon;
