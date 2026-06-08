@@ -240,13 +240,15 @@ function draw() {
 
   obstacles.forEach((obstacle) => {
     const rightX = obstacle.x + obstacleWidth;
-    const topLeftY = Math.max(0, obstacle.gapY - obstacleWidth);
-    const bottomLeftY = Math.min(height, obstacle.gapY + gapSize + obstacleWidth);
+    const gapTop = obstacle.flipped ? height - (obstacle.gapY + gapSize) : obstacle.gapY;
+    const gapBottom = gapTop + gapSize;
+    const topLeftY = Math.max(0, gapTop - obstacleWidth);
+    const bottomLeftY = Math.min(height, gapBottom + obstacleWidth);
 
     const pathPolygon = [
       { x: obstacle.x, y: topLeftY },
-      { x: rightX, y: obstacle.gapY },
-      { x: rightX, y: obstacle.gapY + gapSize },
+      { x: rightX, y: gapTop },
+      { x: rightX, y: gapBottom },
       { x: obstacle.x, y: bottomLeftY },
     ];
 
@@ -263,7 +265,7 @@ function draw() {
     ctx.beginPath();
     ctx.moveTo(obstacle.x, 0);
     ctx.lineTo(rightX, 0);
-    ctx.lineTo(rightX, obstacle.gapY);
+    ctx.lineTo(rightX, gapTop);
     ctx.lineTo(obstacle.x, topLeftY);
     ctx.closePath();
     ctx.fill();
@@ -271,7 +273,7 @@ function draw() {
     ctx.beginPath();
     ctx.moveTo(obstacle.x, height);
     ctx.lineTo(rightX, height);
-    ctx.lineTo(rightX, obstacle.gapY + gapSize);
+    ctx.lineTo(rightX, gapBottom);
     ctx.lineTo(obstacle.x, bottomLeftY);
     ctx.closePath();
     ctx.fill();
