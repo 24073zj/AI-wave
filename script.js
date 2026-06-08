@@ -281,7 +281,6 @@ function draw() {
     ctx.lineTo(obstacle.x, bottomLeftY);
     ctx.stroke();
   });
-  });
 
   if (!started) {
     ctx.fillStyle = 'rgba(0, 0, 0, 0.56)';
