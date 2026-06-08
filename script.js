@@ -66,9 +66,9 @@ function update() {
   for (let i = 0; i < particleCount; i += 1) {
     trail.push({
       x: baseX + (i - particleCount / 2) * 2,
-      y: baseY + (Math.random() - 0.5) * 12,
+      y: baseY,
       vx: -player.speed,
-      alpha: 1 - i * 0.04,
+      alpha: 1,
     });
   }
 
