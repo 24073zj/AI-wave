@@ -66,7 +66,7 @@ function update() {
     alpha: 1,
   };
 
-  trail.push({ ...particle }, { ...particle });
+  trail.push({ ...particle }, { ...particle }, { ...particle }, { ...particle });
 
   trail.forEach((particle) => {
     particle.x += particle.vx;
