@@ -216,14 +216,16 @@ function draw() {
   }
 
   if (trail.length) {
+    const trailOffset = frame * 0.6;
     ctx.strokeStyle = 'rgba(15, 167, 255, 0.35)';
     ctx.lineWidth = 4;
     ctx.beginPath();
     trail.forEach((point, index) => {
+      const x = point.x - trailOffset;
       if (index === 0) {
-        ctx.moveTo(point.x, point.y);
+        ctx.moveTo(x, point.y);
       } else {
-        ctx.lineTo(point.x, point.y);
+        ctx.lineTo(x, point.y);
       }
     });
     ctx.stroke();
