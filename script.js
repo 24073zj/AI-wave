@@ -231,10 +231,14 @@ function draw() {
 
   if (trail.length) {
     trail.forEach((point) => {
+      ctx.save();
       ctx.fillStyle = `rgba(15, 167, 255, ${point.alpha})`;
+      ctx.shadowColor = `rgba(15, 167, 255, ${point.alpha * 0.75})`;
+      ctx.shadowBlur = 10;
       ctx.beginPath();
       ctx.arc(point.x, point.y, 4, 0, Math.PI * 2);
       ctx.fill();
+      ctx.restore();
     });
   }
 
