@@ -231,15 +231,19 @@ function draw() {
 
   if (trail.length) {
     trail.forEach((point) => {
-      ctx.save();
-      ctx.fillStyle = `rgba(15, 167, 255, ${point.alpha})`;
-      ctx.shadowColor = `rgba(15, 167, 255, ${point.alpha * 0.75})`;
-      ctx.shadowBlur = 10;
+      ctx.globalAlpha = point.alpha * 0.35;
+      ctx.fillStyle = '#0fa7ff';
+      ctx.beginPath();
+      ctx.arc(point.x, point.y, 8, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.globalAlpha = point.alpha;
+      ctx.fillStyle = '#0fa7ff';
       ctx.beginPath();
       ctx.arc(point.x, point.y, 4, 0, Math.PI * 2);
       ctx.fill();
-      ctx.restore();
     });
+    ctx.globalAlpha = 1;
   }
 
   ctx.fillStyle = '#0797d9';
