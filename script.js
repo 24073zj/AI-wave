@@ -59,14 +59,18 @@ function update() {
     alive = false;
   }
 
-  const particle = {
-    x: player.x + player.size / 2,
-    y: player.y + player.size / 2,
-    vx: -player.speed,
-    alpha: 1,
-  };
+  const baseX = player.x + player.size / 2;
+  const baseY = player.y + player.size / 2;
+  const particleCount = 8;
 
-  trail.push({ ...particle }, { ...particle }, { ...particle }, { ...particle });
+  for (let i = 0; i < particleCount; i += 1) {
+    trail.push({
+      x: baseX + (i - particleCount / 2) * 2,
+      y: baseY + (Math.random() - 0.5) * 12,
+      vx: -player.speed,
+      alpha: 1 - i * 0.04,
+    });
+  }
 
   trail.forEach((particle) => {
     particle.x += particle.vx;
