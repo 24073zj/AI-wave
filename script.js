@@ -59,10 +59,12 @@ function update() {
     alive = false;
   }
 
-  trail.push({ x: player.x + player.size / 2, y: player.y + player.size / 2 });
-  if (trail.length > 30) {
-    trail.shift();
-  }
+  trail.push({ x: player.x + player.size / 2, y: player.y + player.size / 2, alpha: 1 });
+  trail.forEach((particle) => {
+    particle.x += 3.2;
+    particle.alpha -= 0.03;
+  });
+  trail = trail.filter((particle) => particle.alpha > 0 && particle.x < width + 20);
 
   if (frame % 70 === 0) {
     spawnObstacle();
@@ -216,19 +218,12 @@ function draw() {
   }
 
   if (trail.length) {
-    const trailOffset = frame * 0.6;
-    ctx.strokeStyle = 'rgba(15, 167, 255, 0.35)';
-    ctx.lineWidth = 4;
-    ctx.beginPath();
-    trail.forEach((point, index) => {
-      const x = point.x - trailOffset;
-      if (index === 0) {
-        ctx.moveTo(x, point.y);
-      } else {
-        ctx.lineTo(x, point.y);
-      }
+    trail.forEach((point) => {
+      ctx.fillStyle = `rgba(15, 167, 255, ${point.alpha})`;
+      ctx.beginPath();
+      ctx.arc(point.x, point.y, 4, 0, Math.PI * 2);
+      ctx.fill();
     });
-    ctx.stroke();
   }
 
   ctx.fillStyle = '#0797d9';
