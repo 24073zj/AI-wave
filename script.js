@@ -41,7 +41,8 @@ function resetGame() {
 
 function spawnObstacle(x = width + 20) {
   const gapY = 90 + Math.random() * (height - 220 - gapSize);
-  obstacles.push({ x, gapY, scored: false });
+  obstacles.push({ x, gapY, scored: false, flipped: nextObstacleFlipped });
+  nextObstacleFlipped = !nextObstacleFlipped;
 }
 
 function update() {
@@ -198,20 +199,22 @@ function collidesWithPlayer(obstacle) {
     bottom: player.y + player.size,
   };
 
-  const topLeftY = Math.max(0, obstacle.gapY - obstacleWidth);
-  const bottomLeftY = Math.min(height, obstacle.gapY + gapSize + obstacleWidth);
+  const gapTop = obstacle.flipped ? height - (obstacle.gapY + gapSize) : obstacle.gapY;
+  const gapBottom = gapTop + gapSize;
+  const topLeftY = Math.max(0, gapTop - obstacleWidth);
+  const bottomLeftY = Math.min(height, gapBottom + obstacleWidth);
 
   const topPolygon = [
     { x: obstacle.x, y: 0 },
     { x: obstacle.x + obstacleWidth, y: 0 },
-    { x: obstacle.x + obstacleWidth, y: obstacle.gapY },
+    { x: obstacle.x + obstacleWidth, y: gapTop },
     { x: obstacle.x, y: topLeftY },
   ];
 
   const bottomPolygon = [
     { x: obstacle.x, y: height },
     { x: obstacle.x + obstacleWidth, y: height },
-    { x: obstacle.x + obstacleWidth, y: obstacle.gapY + gapSize },
+    { x: obstacle.x + obstacleWidth, y: gapBottom },
     { x: obstacle.x, y: bottomLeftY },
   ];
 
