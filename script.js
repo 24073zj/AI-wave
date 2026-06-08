@@ -59,12 +59,20 @@ function update() {
     alive = false;
   }
 
-  trail.push({ x: player.x + player.size / 2, y: player.y + player.size / 2, alpha: 1 });
+  const particle = {
+    x: player.x + player.size / 2,
+    y: player.y + player.size / 2,
+    vx: -player.speed,
+    alpha: 1,
+  };
+
+  trail.push({ ...particle }, { ...particle });
+
   trail.forEach((particle) => {
-    particle.x += 3.2;
+    particle.x += particle.vx;
     particle.alpha -= 0.03;
   });
-  trail = trail.filter((particle) => particle.alpha > 0 && particle.x < width + 20);
+  trail = trail.filter((particle) => particle.alpha > 0 && particle.x > -20);
 
   if (frame % 70 === 0) {
     spawnObstacle();
