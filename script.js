@@ -38,9 +38,9 @@ function resetGame() {
   trail = [];
 }
 
-function spawnObstacle() {
+function spawnObstacle(x = width + 20) {
   const gapY = 90 + Math.random() * (height - 220 - gapSize);
-  obstacles.push({ x: width + 20, gapY, scored: false });
+  obstacles.push({ x, gapY, scored: false });
 }
 
 function update() {
@@ -78,8 +78,13 @@ function update() {
   });
   trail = trail.filter((particle) => particle.alpha > 0 && particle.x > -20);
 
-  if (frame % 70 === 0) {
+  if (obstacles.length === 0) {
     spawnObstacle();
+  } else {
+    const lastObstacle = obstacles[obstacles.length - 1];
+    if (lastObstacle.x + obstacleWidth <= width + 20) {
+      spawnObstacle(lastObstacle.x + obstacleWidth);
+    }
   }
 
   obstacles.forEach((obstacle) => {
