@@ -26,6 +26,7 @@ let started = false;
 let alive = true;
 let inputActive = false;
 let trail = [];
+let nextObstacleFlipped = false;
 
 function resetGame() {
   obstacles = [];
