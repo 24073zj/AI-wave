@@ -199,24 +199,45 @@ function collidesWithPlayer(obstacle) {
     bottom: player.y + player.size,
   };
 
-  const gapTop = obstacle.flipped ? height - (obstacle.gapY + gapSize) : obstacle.gapY;
+  // horizontal flip means the notch is mirrored left-right
+  const gapTop = obstacle.gapY;
   const gapBottom = gapTop + gapSize;
+  const rightX = obstacle.x + obstacleWidth;
   const topLeftY = Math.max(0, gapTop - obstacleWidth);
   const bottomLeftY = Math.min(height, gapBottom + obstacleWidth);
 
-  const topPolygon = [
-    { x: obstacle.x, y: 0 },
-    { x: obstacle.x + obstacleWidth, y: 0 },
-    { x: obstacle.x + obstacleWidth, y: gapTop },
-    { x: obstacle.x, y: topLeftY },
-  ];
+  let topPolygon;
+  let bottomPolygon;
+  if (!obstacle.flipped) {
+    topPolygon = [
+      { x: obstacle.x, y: 0 },
+      { x: rightX, y: 0 },
+      { x: rightX, y: gapTop },
+      { x: obstacle.x, y: topLeftY },
+    ];
 
-  const bottomPolygon = [
-    { x: obstacle.x, y: height },
-    { x: obstacle.x + obstacleWidth, y: height },
-    { x: obstacle.x + obstacleWidth, y: gapBottom },
-    { x: obstacle.x, y: bottomLeftY },
-  ];
+    bottomPolygon = [
+      { x: obstacle.x, y: height },
+      { x: rightX, y: height },
+      { x: rightX, y: gapBottom },
+      { x: obstacle.x, y: bottomLeftY },
+    ];
+  } else {
+    // mirrored horizontally: gap sits on the left edge
+    topPolygon = [
+      { x: rightX, y: 0 },
+      { x: obstacle.x, y: 0 },
+      { x: obstacle.x, y: gapTop },
+      { x: rightX, y: topLeftY },
+    ];
+
+    bottomPolygon = [
+      { x: rightX, y: height },
+      { x: obstacle.x, y: height },
+      { x: obstacle.x, y: gapBottom },
+      { x: rightX, y: bottomLeftY },
+    ];
+  }
 
   return rectPolygonCollision(rect, topPolygon) || rectPolygonCollision(rect, bottomPolygon);
 }
@@ -240,17 +261,29 @@ function draw() {
 
   obstacles.forEach((obstacle) => {
     const rightX = obstacle.x + obstacleWidth;
-    const gapTop = obstacle.flipped ? height - (obstacle.gapY + gapSize) : obstacle.gapY;
+    const gapTop = obstacle.gapY;
     const gapBottom = gapTop + gapSize;
     const topLeftY = Math.max(0, gapTop - obstacleWidth);
     const bottomLeftY = Math.min(height, gapBottom + obstacleWidth);
 
-    const pathPolygon = [
-      { x: obstacle.x, y: topLeftY },
-      { x: rightX, y: gapTop },
-      { x: rightX, y: gapBottom },
-      { x: obstacle.x, y: bottomLeftY },
-    ];
+    // main body polygon (dark)
+    let pathPolygon;
+    if (!obstacle.flipped) {
+      pathPolygon = [
+        { x: obstacle.x, y: topLeftY },
+        { x: rightX, y: gapTop },
+        { x: rightX, y: gapBottom },
+        { x: obstacle.x, y: bottomLeftY },
+      ];
+    } else {
+      // mirrored horizontally: slant faces left
+      pathPolygon = [
+        { x: rightX, y: topLeftY },
+        { x: obstacle.x, y: gapTop },
+        { x: obstacle.x, y: gapBottom },
+        { x: rightX, y: bottomLeftY },
+      ];
+    }
 
     ctx.fillStyle = 'rgba(8, 24, 40, 0.9)';
     ctx.beginPath();
@@ -261,30 +294,54 @@ function draw() {
     ctx.closePath();
     ctx.fill();
 
+    // top cap (red)
     ctx.fillStyle = '#ff6b6b';
     ctx.beginPath();
-    ctx.moveTo(obstacle.x, 0);
-    ctx.lineTo(rightX, 0);
-    ctx.lineTo(rightX, gapTop);
-    ctx.lineTo(obstacle.x, topLeftY);
+    if (!obstacle.flipped) {
+      ctx.moveTo(obstacle.x, 0);
+      ctx.lineTo(rightX, 0);
+      ctx.lineTo(rightX, gapTop);
+      ctx.lineTo(obstacle.x, topLeftY);
+    } else {
+      ctx.moveTo(obstacle.x, 0);
+      ctx.lineTo(rightX, 0);
+      ctx.lineTo(rightX, topLeftY);
+      ctx.lineTo(obstacle.x, gapTop);
+    }
     ctx.closePath();
     ctx.fill();
 
+    // bottom cap (red)
     ctx.beginPath();
-    ctx.moveTo(obstacle.x, height);
-    ctx.lineTo(rightX, height);
-    ctx.lineTo(rightX, gapBottom);
-    ctx.lineTo(obstacle.x, bottomLeftY);
+    if (!obstacle.flipped) {
+      ctx.moveTo(obstacle.x, height);
+      ctx.lineTo(rightX, height);
+      ctx.lineTo(rightX, gapBottom);
+      ctx.lineTo(obstacle.x, bottomLeftY);
+    } else {
+      ctx.moveTo(obstacle.x, height);
+      ctx.lineTo(rightX, height);
+      ctx.lineTo(rightX, bottomLeftY);
+      ctx.lineTo(obstacle.x, gapBottom);
+    }
     ctx.closePath();
     ctx.fill();
 
+    // outline stroke
     ctx.strokeStyle = 'rgba(255,255,255,0.28)';
     ctx.lineWidth = 2;
     ctx.beginPath();
-    ctx.moveTo(obstacle.x, topLeftY);
-    ctx.lineTo(rightX, obstacle.gapY);
-    ctx.lineTo(rightX, obstacle.gapY + gapSize);
-    ctx.lineTo(obstacle.x, bottomLeftY);
+    if (!obstacle.flipped) {
+      ctx.moveTo(obstacle.x, topLeftY);
+      ctx.lineTo(rightX, obstacle.gapY);
+      ctx.lineTo(rightX, obstacle.gapY + gapSize);
+      ctx.lineTo(obstacle.x, bottomLeftY);
+    } else {
+      ctx.moveTo(rightX, topLeftY);
+      ctx.lineTo(obstacle.x, obstacle.gapY);
+      ctx.lineTo(obstacle.x, obstacle.gapY + gapSize);
+      ctx.lineTo(rightX, bottomLeftY);
+    }
     ctx.stroke();
   });
 
