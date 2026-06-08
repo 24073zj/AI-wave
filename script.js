@@ -229,28 +229,6 @@ function draw() {
     ctx.fillRect((i * 80 + frame * 0.6) % width, height - 16, 35, 8);
   }
 
-  if (trail.length) {
-    trail.forEach((point) => {
-      ctx.globalAlpha = point.alpha * 0.35;
-      ctx.fillStyle = '#0fa7ff';
-      ctx.beginPath();
-      ctx.arc(point.x, point.y, 8, 0, Math.PI * 2);
-      ctx.fill();
-
-      ctx.globalAlpha = point.alpha;
-      ctx.fillStyle = '#0fa7ff';
-      ctx.beginPath();
-      ctx.arc(point.x, point.y, 4, 0, Math.PI * 2);
-      ctx.fill();
-    });
-    ctx.globalAlpha = 1;
-  }
-
-  ctx.fillStyle = '#0797d9';
-  ctx.fillRect(player.x, player.y, player.size, player.size);
-  ctx.fillStyle = '#ffffff';
-  ctx.fillRect(player.x + 10, player.y + 10, 4, 4);
-
   obstacles.forEach((obstacle) => {
     const rightX = obstacle.x + obstacleWidth;
     const topLeftY = Math.max(0, obstacle.gapY - obstacleWidth);
@@ -298,6 +276,28 @@ function draw() {
     ctx.lineTo(obstacle.x, bottomLeftY);
     ctx.stroke();
   });
+
+  if (trail.length) {
+    trail.forEach((point) => {
+      ctx.globalAlpha = point.alpha * 0.35;
+      ctx.fillStyle = '#0fa7ff';
+      ctx.beginPath();
+      ctx.arc(point.x, point.y, 8, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.globalAlpha = point.alpha;
+      ctx.fillStyle = '#0fa7ff';
+      ctx.beginPath();
+      ctx.arc(point.x, point.y, 4, 0, Math.PI * 2);
+      ctx.fill();
+    });
+    ctx.globalAlpha = 1;
+  }
+
+  ctx.fillStyle = '#0797d9';
+  ctx.fillRect(player.x, player.y, player.size, player.size);
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(player.x + 10, player.y + 10, 4, 4);
 
   if (!started) {
     ctx.fillStyle = 'rgba(0, 0, 0, 0.56)';
